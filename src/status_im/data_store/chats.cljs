@@ -10,6 +10,7 @@
 (def private-group-chat-type 3)
 (def profile-chat-type 4)
 (def timeline-chat-type 5)
+(def community-chat-type 6)
 
 (defn type->rpc [{:keys [public? group-chat profile-public-key timeline?] :as chat}]
   (assoc chat :chatType (cond
@@ -28,6 +29,9 @@
                                                 :public? true
                                                 :group-chat true
                                                 :timeline? (= timeline-chat-type chatType))
+    (= community-chat-type chatType) (assoc chat
+                                            :chat-name name
+                                            :group-chat true)
     (= private-group-chat-type chatType) (assoc chat
                                                 :chat-name name
                                                 :public? false
@@ -91,6 +95,7 @@
       rpc->type
       unmarshal-members
       (clojure.set/rename-keys {:id :chat-id
+                                :organisationId :community-id
                                 :membershipUpdateEvents :membership-update-events
                                 :deletedAtClockValue :deleted-at-clock-value
                                 :unviewedMessagesCount :unviewed-messages-count
