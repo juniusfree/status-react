@@ -9,6 +9,7 @@
                              text
                              response-to
                              ens-name
+                             community-id
                              image-path
                              audio-path
                              audio-duration-ms
@@ -23,6 +24,7 @@
                  :audioPath       audio-path
                  :audioDurationMs audio-duration-ms
                  :sticker         sticker
+                 :communityId community-id
                  :contentType     content-type}]
    :on-success
    #(re-frame/dispatch [:transport/message-sent % 1])
