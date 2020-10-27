@@ -116,6 +116,8 @@
    "wakuext_joinCommunity" {}
    "wakuext_leaveCommunity" {}
    "wakuext_communities" {}
+   "wakuext_importCommunity" {}
+   "wakuext_exportCommunity" {}
    "status_chats" {}
    "localnotifications_switchWalletNotifications" {}
    "localnotifications_notificationPreferences" {}

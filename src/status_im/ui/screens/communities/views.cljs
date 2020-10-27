@@ -9,10 +9,12 @@
      [status-im.communities.core :as communities]
      [status-im.ui.screens.home.views :as home.views]
      [status-im.ui.components.list.views :as list]
+     [status-im.ui.components.copyable-text :as copyable-text]
      [status-im.ui.components.topbar :as topbar]
      [status-im.ui.components.colors :as colors]
      [status-im.ui.components.chat-icon.screen :as chat-icon.screen]
      [status-im.ui.components.toolbar :as toolbar]
+     [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
      [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
      [status-im.ui.components.react :as react]))
 
@@ -80,10 +82,32 @@
                                     (re-frame/dispatch [:dismiss-keyboard])
                                     (re-frame/dispatch [:navigate-to :community id]))}]))
 
+(defn communities-actions []
+  [react/view
+   [quo/list-item
+    {:theme               :accent
+     :title               (i18n/label :t/import-community)
+     :accessibility-label :community-import-community
+     :icon                :main-icons/check
+     :on-press            #(hide-sheet-and-dispatch [::import-pressed])}]
+   [quo/list-item
+    {:theme               :accent
+     :title               (i18n/label :t/create-community)
+     :accessibility-label :community-create-community
+     :icon                :main-icons/check
+     :on-press            #(hide-sheet-and-dispatch [::create-pressed])}]])
+
 (views/defview communities []
   (views/letsubs [communities [:communities]]
     [react/view {:flex 1}
-     [topbar/topbar {:title (i18n/label :t/communities)}]
+     [topbar/topbar {:title (i18n/label :t/communities)
+                     :right-accessories [{:icon                :main-icons/more
+                                          :accessibility-label :chat-menu-button
+                                          :on-press
+                                          #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                               {:content (fn []
+                                                                           [communities-actions])
+                                                                :height  256}])}]}]
      [react/scroll-view {:style                   {:flex 1}
                          :content-container-style {:padding-vertical 8}}
       [list/flat-list
@@ -95,6 +119,11 @@
       {:show-border? true
        :center [quo/button {:on-press #(re-frame/dispatch [::create-pressed])}
                 (i18n/label :t/create-a-community)]}]]))
+
+(fx/defn import-pressed
+  {:events [::import-pressed]}
+  [cofx]
+  (bottom-sheet/show-bottom-sheet cofx {:view :import-community}))
 
 (fx/defn create-pressed
   {:events [::create-pressed]}
@@ -120,22 +149,37 @@
   {:events [::community-created]}
   [cofx response]
   (fx/merge cofx
-            {:dispatch [:bottom-sheet/hide]}
+            (bottom-sheet/hide-bottom-sheet)
+            (communities/handle-response response)))
+
+(fx/defn community-imported
+  {:events [::community-imported]}
+  [cofx response]
+  (fx/merge cofx
+            (bottom-sheet/hide-bottom-sheet)
             (communities/handle-response response)))
 
 (fx/defn people-invited
   {:events [::people-invited]}
   [cofx response]
   (fx/merge cofx
-            {:dispatch [:bottom-sheet/hide]}
+            (bottom-sheet/hide-bottom-sheet)
             (communities/handle-response response)))
 
 (fx/defn community-channel-created
   {:events [::community-channel-created]}
   [cofx response]
   (fx/merge cofx
-            {:dispatch [:bottom-sheet/hide]}
+            (bottom-sheet/hide-bottom-sheet)
             (communities/handle-response response)))
+
+(fx/defn import-confirmation-pressed
+  {:events [::import-confirmation-pressed]}
+  [cofx community-key]
+  (communities/import-community
+   cofx
+   community-key
+   #(re-frame/dispatch [::community-imported %])))
 
 (fx/defn create-confirmation-pressed
   {:events [::create-confirmation-pressed]}
@@ -170,6 +214,23 @@
   (and (not= "" community-name)
        (not= "" community-description)))
 
+(defn import-community []
+  (let [community-key (reagent/atom "")]
+    (fn []
+      [react/view {:style {:padding-left    16
+                           :padding-right   8}}
+       [react/view {:style {:padding-horizontal 20}}
+        [quo/text-input
+         {:label          (i18n/label :t/community-key)
+          :placeholder    (i18n/label :t/community-key-placeholder)
+          :on-change-text #(reset! community-key %)
+          :auto-focus     true}]]
+       [react/view {:style {:padding-top 20
+                            :padding-horizontal 20}}
+        [quo/button {:disabled  (= @community-key "")
+                     :on-press #(re-frame/dispatch [::import-confirmation-pressed @community-key])}
+         (i18n/label :t/import)]]])))
+
 (defn create []
   (let [community-name (reagent/atom "")
         community-description (reagent/atom "")]
@@ -198,6 +259,9 @@
 
 (def create-sheet
   {:content create})
+
+(def import-sheet
+  {:content import-community})
 
 (defn create-channel []
   (let [channel-name (reagent/atom "")
@@ -248,8 +312,21 @@
 (def invite-people-sheet
   {:content invite-people})
 
+(fx/defn handle-export-pressed
+  {:events [::export-pressed]}
+  [cofx community-id]
+  (communities/export cofx community-id
+                      #(re-frame/dispatch [:show-popover {:view  :export-community
+                                                          :community-key %}])))
 (defn community-actions [id admin]
   [react/view
+   (when admin
+     [quo/list-item
+      {:theme               :accent
+       :title               (i18n/label :t/export-key)
+       :accessibility-label :community-export-key
+       :icon                :main-icons/check
+       :on-press            #(hide-sheet-and-dispatch [::export-pressed id])}])
    (when admin
      [quo/list-item
       {:theme               :accent
@@ -317,3 +394,18 @@
                             :padding-horizontal 20}}
         [quo/button {:on-press #(re-frame/dispatch [::communities/join id])}
          (i18n/label :t/join)]])]))
+
+(views/defview export-community []
+  (views/letsubs [{:keys [community-key]}     [:popover/popover]]
+    [react/view {}
+     [react/view {:style {:padding-top 16 :padding-horizontal 16}}
+      [copyable-text/copyable-text-view
+       {:label           :t/community-key
+        :container-style {:margin-top 12 :margin-bottom 4}
+        :copied-text     community-key}
+       [quo/text {:number-of-lines     1
+                  :ellipsize-mode      :middle
+                  :accessibility-label :chat-key
+                  :monospace           true}
+        community-key]]]]))
+

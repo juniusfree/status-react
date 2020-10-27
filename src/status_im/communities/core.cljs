@@ -5,6 +5,7 @@
    [status-im.utils.fx :as fx]
    [status-im.constants :as constants]
    [status-im.chat.models :as models.chat]
+   [status-im.transport.filters.core :as models.filters]
    [status-im.data-store.chats :as data-store.chats]
    [status-im.ethereum.json-rpc :as json-rpc]))
 
@@ -19,6 +20,9 @@
                                             :description (:description identity)}))))
 (fx/defn handle-chats [cofx chats]
   (models.chat/ensure-chats cofx chats))
+
+(fx/defn handle-filters [cofx filters]
+  (models.filters/handle-filters cofx filters))
 
 (fx/defn handle-removed-chats [{:keys [db]} chat-ids]
   {:db (reduce (fn [db chat-id]
@@ -46,7 +50,8 @@
                                     (data-store.chats/<-rpc)
                                     (dissoc :unviewed-messages-count))
                                (:chats response)))
-            (handle-fetched (:communities response))))
+            (handle-fetched (:communities response))
+            (handle-filters (:filters response))))
 
 (fx/defn left
   {:events [::left]}
@@ -57,6 +62,24 @@
   {:events [::joined]}
   [cofx response]
   (handle-response cofx response))
+
+(fx/defn export
+  [cofx community-id on-success]
+  {::json-rpc/call [{:method "wakuext_exportCommunity"
+                     :params [community-id]
+                     :on-success on-success
+                     :on-error #(do
+                                  (log/error "failed to export community" community-id %)
+                                  (re-frame/dispatch [::failed-to-export %]))}]})
+(fx/defn import-community
+  {:events [::import]}
+  [cofx community-key on-success]
+  {::json-rpc/call [{:method "wakuext_importCommunity"
+                     :params [community-key]
+                     :on-success on-success
+                     :on-error #(do
+                                  (log/error "failed to import community" %)
+                                  (re-frame/dispatch [::failed-to-import %]))}]})
 
 (fx/defn join
   {:events [::join]}

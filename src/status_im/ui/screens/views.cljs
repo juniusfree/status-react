@@ -53,6 +53,9 @@
           (= view :create-community)
           (merge communities/create-sheet)
 
+          (= view :import-community)
+          (merge communities/import-sheet)
+
           (= view :create-community-channel)
           (merge communities/create-channel-sheet)
 

@@ -232,6 +232,9 @@
               (mailserver/process-next-messages-request))
             (set-filters-initialized)))
 
+(fx/defn handle-filters [cofx filters]
+  (handle-filters-added cofx (map responses->filters filters)))
+
 (fx/defn handle-filters-removed
   "Called when we remove a filter from status-go, it will update the mailserver
   topics"
