@@ -139,18 +139,23 @@
                                       :active (get-in cofx [:db :chats user-pk :active])}
                                      #(re-frame/dispatch [::chat-created community-id user-pk]))))
 
-(defn create [community-name
-              community-description
-              on-success-event
-              on-failure-event]
-  {::json-rpc/call [{:method "wakuext_createCommunity"
-                     :params [{:identity {:display_name community-name
-                                          :description community-description}
-                               :permissions {:access access-no-membership}}]
-                     :on-success #(re-frame/dispatch [on-success-event %])
-                     :on-error #(do
-                                  (log/error "failed to create community" %)
-                                  (re-frame/dispatch [on-failure-event %]))}]})
+(fx/defn create [{:keys [db]}
+                 community-name
+                 community-description
+                 community-membership
+                 on-success-event
+                 on-failure-event]
+  (let [membership (js/parseInt community-membership)
+        my-public-key (get-in db [:multiaccount :public-key])]
+    {::json-rpc/call [{:method "wakuext_createCommunity"
+                       :params [{:identity {:display_name community-name
+                                            :description community-description}
+                                 :members {my-public-key {}}
+                                 :permissions {:access membership}}]
+                       :on-success #(re-frame/dispatch [on-success-event %])
+                       :on-error #(do
+                                    (log/error "failed to create community" %)
+                                    (re-frame/dispatch [on-failure-event %]))}]}))
 
 (defn create-channel [community-id
                       community-channel-name
@@ -177,8 +182,11 @@
 
 ;; TODO: test this
 (defn can-post? [{:keys [admin] :as community} pk local-chat-id]
-  (let [chat-id (keyword (subs local-chat-id 68))]
+  (let [chat-id (keyword (subs local-chat-id 68))
+        can-access-community? (or (get-in community [:description :members (keyword pk)])
+                                  (not (require-membership? (get-in community [:description :permissions]))))]
+    (println "CAN_ACE" can-access-community? pk community)
     (or admin
-        (and (not (require-membership? (get-in community [:description :permissions])))
-             (not (require-membership? (get-in community [:description :chats chat-id :permissions]))))
-        (get-in community [:description :chats chat-id :members pk]))))
+        (get-in community [:description :chats chat-id :members (keyword pk)])
+        (and can-access-community?
+             (not (require-membership? (get-in community [:description :chats chat-id :permissions])))))))

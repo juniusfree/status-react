@@ -15,7 +15,6 @@
      [status-im.ui.components.chat-icon.screen :as chat-icon.screen]
      [status-im.ui.components.toolbar :as toolbar]
      [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
-     [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
      [status-im.ui.components.react :as react]))
 
 (defn hide-sheet-and-dispatch [event]
@@ -183,10 +182,12 @@
 
 (fx/defn create-confirmation-pressed
   {:events [::create-confirmation-pressed]}
-  [cofx community-name community-description]
+  [cofx community-name community-description membership]
   (communities/create
+   cofx
    community-name
    community-description
+   membership
    ::community-created
    ::failed-to-create-community))
 
@@ -233,6 +234,7 @@
 
 (defn create []
   (let [community-name (reagent/atom "")
+        membership  (reagent/atom 1)
         community-description (reagent/atom "")]
     (fn []
       [react/view {:style {:padding-left    16
@@ -250,11 +252,16 @@
           :multiline       true
           :number-of-lines 4
           :on-change-text  #(reset! community-description %)}]]
+       [react/view {:style {:padding-horizontal 20}}
+        [quo/text-input
+         {:label           (i18n/label :t/membership-type)
+          :placeholder     (i18n/label :t/membership-type-placeholder)
+          :on-change-text  #(reset! membership %)}]]
 
        [react/view {:style {:padding-top 20
                             :padding-horizontal 20}}
         [quo/button {:disabled  (not (valid? @community-name @community-description))
-                     :on-press #(re-frame/dispatch [::create-confirmation-pressed @community-name @community-description])}
+                     :on-press #(re-frame/dispatch [::create-confirmation-pressed @community-name @community-description @membership])}
          (i18n/label :t/create)]]])))
 
 (def create-sheet

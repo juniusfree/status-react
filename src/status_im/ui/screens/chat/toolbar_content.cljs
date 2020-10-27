@@ -1,5 +1,6 @@
 (ns status-im.ui.screens.chat.toolbar-content
   (:require [status-im.i18n :as i18n]
+            [status-im.constants :as constants]
             [status-im.ui.components.chat-icon.screen :as chat-icon.screen]
             [status-im.ui.components.react :as react]
             [status-im.ui.screens.chat.styles.main :as st]
@@ -38,6 +39,7 @@
                     chat-id
                     contacts
                     chat-name
+                    chat-type
                     public?]}
             [:chats/current-chat]]
     [react/view {:style st/toolbar-container}
@@ -52,6 +54,6 @@
         [one-to-one-name chat-id])
       (when-not group-chat
         [contact-indicator chat-id])
-      (when (and group-chat (not invitation-admin))
+      (when (and group-chat (not invitation-admin) (not= chat-type constants/community-chat-type))
         [group-last-activity {:contacts   contacts
                               :public?    public?}])]]))

@@ -69,9 +69,7 @@
 
 (def system "system")
 
-#_(def mainnet-rpc-url (str "https://mainnet.infura.io/v3/" config/INFURA_TOKEN))
-#_(def mainnet-rpc-url "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a")
-(def mainnet-rpc-url "https://eth-archival.gateway.pokt.network/v1/5f8fee9fb90218002e9cea56")
+(def mainnet-rpc-url (str "https://mainnet.infura.io/v3/" config/INFURA_TOKEN))
 
 (def mainnet-networks
   [{:id             "mainnet_rpc",
