@@ -16,6 +16,7 @@
             [status-im.utils.gfycat.core :as gfy]
             [status-im.utils.universal-links.utils :as universal-links]
             [status-im.ui.components.profile-header.view :as profile-header]
+            [status-im.ui.screens.profile.user.edit-picture :as edit]
             [status-im.utils.utils :as utils]
             [status-im.ethereum.stateofus :as stateofus])
   (:require-macros [status-im.utils.views :as views]))
@@ -179,6 +180,8 @@
          :use-insets        true
          :extended-header   (profile-header/extended-header
                              {:on-press         on-share
+                              :on-edit   #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                              {:content (edit/bottom-sheet false)}])
                               :title            (multiaccounts/displayed-name account)
                               :photo            (multiaccounts/displayed-photo account)
                               :monospace        (not ens-verified)
