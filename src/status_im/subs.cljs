@@ -2027,7 +2027,11 @@
                            (vals chats))
                           (vals chats))]
 
-     (sort-by :timestamp > (filter (fn [{:keys [community-id]}] (not community-id)) filtered-chats)))))
+     (sort-by :timestamp > (filter (fn [{:keys [community-id]}]
+                                     ;; Ignore communities unless status-community chats
+                                     (or (not community-id)
+                                         (= community-id constants/status-community-id)))
+                                   filtered-chats)))))
 
 (defn extract-currency-attributes [currency]
   (let [{:keys [code display-name]} (val currency)]

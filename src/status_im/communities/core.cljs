@@ -9,6 +9,10 @@
    [status-im.data-store.chats :as data-store.chats]
    [status-im.ethereum.json-rpc :as json-rpc]))
 
+(def featured
+  [{:name "Status"
+    :id constants/status-community-id}])
+
 (def access-no-membership 1)
 (def access-invitation-only 2)
 (def access-on-request 3)

@@ -7,7 +7,8 @@
      [status-im.utils.core :as utils]
      [status-im.utils.fx :as fx]
      [status-im.communities.core :as communities]
-     [status-im.ui.screens.home.views :as home.views]
+     [status-im.ui.screens.home.views.inner-item :as inner-item]
+     [status-im.ui.screens.home.styles :as home.styles]
      [status-im.ui.components.list.views :as list]
      [status-im.ui.components.copyable-text :as copyable-text]
      [status-im.ui.components.topbar :as topbar]
@@ -373,9 +374,24 @@
                                                           [community-actions id admin])
                                                :height  256}])}]}])
 
+
+(defn welcome-blank-page []
+  [react/view {:style {:flex 1 :flex-direction :row :align-items :center :justify-content :center}}
+   [react/i18n-text {:style home.styles/welcome-blank-text :key :welcome-blank-message}]])
+
+(defn community-chat-list [chats]
+  (if (empty? chats)
+    [welcome-blank-page]
+    [list/flat-list
+     {:key-fn                       :chat-id
+      :keyboard-should-persist-taps :always
+      :data                         chats
+      :render-fn                    (fn [home-item] [inner-item/home-list-item home-item])
+      :footer                       [react/view {:height 68}]}]))
+
 (views/defview community-channel-list [id]
   (views/letsubs [chats [:chats/by-community-id id]]
-    [home.views/chats-list-2 chats false nil true]))
+    [community-chat-list chats]))
 
 (defn community-channel-preview-list [_ chats]
   [react/view {:flex 1}
@@ -415,4 +431,17 @@
                   :accessibility-label :chat-key
                   :monospace           true}
         community-key]]]]))
+
+
+(defn- join-featured-community-pressed [community-id]
+  (re-frame/dispatch [::communities/join community-id])
+  (re-frame/dispatch [:set :public-group-topic nil]))
+
+(defn render-featured-community [{:keys [name id]}]
+  ^{:key id}
+  [react/touchable-highlight {:on-press            #(join-featured-community-pressed id)
+                              :accessibility-label :chat-item}
+   [react/view {:padding-right 8 :padding-vertical 8}
+    [react/view {:border-color colors/gray-lighter :border-radius 36 :border-width 1 :padding-horizontal 8 :padding-vertical 5}
+     [react/text {:style {:color colors/blue :typography :main-medium}} name]]]])
 

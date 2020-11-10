@@ -3,11 +3,13 @@
             [reagent.core :as reagent]
             [status-im.i18n :as i18n]
             [status-im.react-native.resources :as resources]
+            [status-im.communities.core :as communities]
             [status-im.ui.components.connectivity.view :as connectivity]
             [status-im.ui.components.icons.vector-icons :as icons]
             [status-im.ui.components.list.views :as list]
             [status-im.ui.components.react :as react]
             [status-im.ui.screens.home.styles :as styles]
+            [status-im.ui.screens.communities.views :as communities.views]
             [status-im.ui.screens.home.views.inner-item :as inner-item]
             [status-im.ui.components.colors :as colors]
             [status-im.ui.screens.add-new.new-public-chat.view :as new-public-chat]
@@ -78,7 +80,14 @@
     [react/view {:style styles/tags-wrapper}
      [react/view {:flex-direction :row :flex-wrap :wrap :justify-content :center}
       (for [chat (new-public-chat/featured-public-chats)]
-        (new-public-chat/render-topic chat))]]]])
+        (new-public-chat/render-topic chat))]]
+    [react/i18n-text {:style {:margin-horizontal 16
+                              :text-align        :center}
+                      :key   :join-a-community}]
+    [react/view {:style styles/tags-wrapper}
+     [react/view {:flex-direction :row :flex-wrap :wrap :justify-content :center}
+      (for [community communities/featured]
+        (communities.views/render-featured-community community))]]]])
 
 (defn welcome-blank-page []
   [react/view {:style {:flex 1 :flex-direction :row :align-items :center :justify-content :center}}
@@ -132,7 +141,7 @@
                                      (re-frame/dispatch [:set :public-group-topic nil])
                                      (re-frame/dispatch [:search/home-filter-changed nil]))}])])))
 
-(defn chats-list-2 [chats loading? search-filter hide-home-tooltip?]
+(defn chats-flat-list [chats loading? search-filter hide-home-tooltip?]
   (if loading?
     [react/view {:flex 1 :align-items :center :justify-content :center}
      [react/activity-indicator {:animating true}]]
@@ -158,7 +167,7 @@
   (views/letsubs [loading? [:chats/loading?]
                   {:keys [chats search-filter]} [:home-items]
                   {:keys [hide-home-tooltip?]} [:multiaccount]]
-    [chats-list-2 chats loading? search-filter hide-home-tooltip?]))
+    [chats-flat-list chats loading? search-filter hide-home-tooltip?]))
 
 (views/defview plus-button []
   (views/letsubs [logging-in? [:multiaccounts/login]]

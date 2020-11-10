@@ -18,6 +18,10 @@
             [status-im.utils.types :as types]
             [status-im.ui.screens.add-new.new-public-chat.db :as new-public-chat.db]))
 
+;; This are chats that if opened they will make the user join the status-community
+;; instead of being treated as normal public chats
+(def status-community-chat? #{"status-standups", "status-announcements"})
+
 (defn chats []
   (:chats (types/json->clj (js/require "./chats.js"))))
 
