@@ -861,6 +861,87 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
     }
 
     @ReactMethod
+    public void getProfileImages(final Callback callback) {
+        Log.d(TAG, "getProfileImages");
+        if (!checkAvailability()) {
+            callback.invoke(false);
+            return;
+        }
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                String res = Statusgo.getProfileImages();
+
+                callback.invoke(res);
+            }
+        };
+
+        StatusThreadPoolExecutor.getInstance().execute(r);
+    }
+
+    @ReactMethod
+    public void getProfileImage(final String name, final Callback callback) {
+        Log.d(TAG, "getProfileImage");
+        if (!checkAvailability()) {
+            callback.invoke(false);
+            return;
+        }
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                String res = Statusgo.getProfileImage(name);
+
+                callback.invoke(res);
+            }
+        };
+
+        StatusThreadPoolExecutor.getInstance().execute(r);
+    }
+ 
+    @ReactMethod
+    public void deleteProfileImage(final String name, final Callback callback) {
+        Log.d(TAG, "deleteProfileImage");
+        if (!checkAvailability()) {
+            callback.invoke(false);
+            return;
+        }
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                String res = Statusgo.deleteProfileImage(name);
+
+                callback.invoke(res);
+            }
+        };
+
+        StatusThreadPoolExecutor.getInstance().execute(r);
+    }
+
+    @ReactMethod
+    public void saveProfileImage(final String path,
+                                 final int ax,
+                                 final int ay,
+                                 final int bx,
+                                 final int by,
+                                 final Callback callback) {
+        Log.d(TAG, "saveProfileImage");
+        if (!checkAvailability()) {
+            callback.invoke(false);
+            return;
+        }
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                String res = Statusgo.saveProfileImage(path, ax, ay, bx, by);
+
+                callback.invoke(res);
+            }
+        };
+
+        StatusThreadPoolExecutor.getInstance().execute(r);
+    }
+
+    @ReactMethod
     public void hashTransaction(final String txArgsJSON, final Callback callback) {
         Log.d(TAG, "hashTransaction");
         if (!checkAvailability()) {

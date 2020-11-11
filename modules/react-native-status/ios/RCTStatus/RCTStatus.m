@@ -291,6 +291,49 @@ RCT_EXPORT_METHOD(multiAccountImportPrivateKey:(NSString *)json
     callback(@[result]);
 }
 
+//////////////////////////////////////////////////////////////////// GetProfileImages
+RCT_EXPORT_METHOD(getProfileImages:(RCTResponseSenderBlock)callback) {
+#if DEBUG
+    NSLog(@"GetProfileImages() method called");
+#endif
+    NSString *result = StatusgoGetProfileImages();
+    callback(@[result]);
+}
+
+//////////////////////////////////////////////////////////////////// GetProfileImages
+RCT_EXPORT_METHOD(getProfileImage:(NSString *)imageName
+                  callback:(RCTResponseSenderBlock)callback) {
+#if DEBUG
+    NSLog(@"GetProfileImage() method called");
+#endif
+    NSString *result = StatusgoGetProfileImage(imageName);
+    callback(@[result]);
+}
+
+//////////////////////////////////////////////////////////////////// DeleteProfileImage
+RCT_EXPORT_METHOD(deleteProfileImage:(NSString *)imageName
+                  callback:(RCTResponseSenderBlock)callback) {
+#if DEBUG
+    NSLog(@"DeleteProfileImage() method called");
+#endif
+    NSString *result = StatusgoDeleteProfileImage(imageName);
+    callback(@[result]);
+}
+
+//////////////////////////////////////////////////////////////////// GetProfileImages
+RCT_EXPORT_METHOD(saveProfileImage:(NSString *)path
+                  ax:(NSInteger)ax
+                  ay:(NSInteger)ay
+                  bx:(NSInteger)bx
+                  by:(NSInteger)by
+                  callback:(RCTResponseSenderBlock)callback) {
+#if DEBUG
+    NSLog(@"SaveProfileImage() method called");
+#endif
+    NSString *result = StatusgoSaveProfileImage(path, ax, ay, bx, by);
+    callback(@[result]);
+}
+
 //////////////////////////////////////////////////////////////////// hashTransaction
 RCT_EXPORT_METHOD(hashTransaction:(NSString *)txArgsJSON
                   callback:(RCTResponseSenderBlock)callback) {
@@ -330,6 +373,7 @@ RCT_EXPORT_METHOD(multiAccountDeriveAddresses:(NSString *)json
     
     return [json valueForKey:@"key-uid"];
 }
+
 
 //////////////////////////////////////////////////////////////////// prepareDirAndUpdateConfig
 -(NSString *) prepareDirAndUpdateConfig:(NSString *)config

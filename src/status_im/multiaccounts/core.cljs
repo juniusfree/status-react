@@ -2,6 +2,7 @@
   (:require [re-frame.core :as re-frame]
             [status-im.ethereum.stateofus :as stateofus]
             [status-im.multiaccounts.update.core :as multiaccounts.update]
+            [ status-im.ui.components.bottom-sheet.core :as bottom-sheet]
             [status-im.native-module.core :as native-module]
             [status-im.utils.fx :as fx]
             [status-im.utils.gfycat.core :as gfycat]
@@ -145,3 +146,27 @@
   (fx/merge cofx
             {::switch-theme theme}
             (multiaccounts.update/multiaccount-update :appearance theme {})))
+
+(re-frame/reg-fx
+ ::save-profile-picture
+ (fn [[path ax ay bx by]]
+   (native-module/save-profile-image path ax ay bx by println)))
+
+(re-frame/reg-fx
+ ::delete-profile-picture
+ (fn [name]
+   (native-module/delete-profile-image name println)))
+
+(fx/defn save-profile-picture
+  {:events [::save-profile-picture]}
+  [cofx path ax ay bx by]
+  (fx/merge cofx
+            {::save-profile-picture [path ax ay bx by]}
+            (bottom-sheet/hide-bottom-sheet)))
+
+(fx/defn delete-profile-picture
+  {:events [::delete-profile-picture]}
+  [cofx name]
+  (fx/merge cofx
+            {::delete-profile-picture name}
+            (bottom-sheet/hide-bottom-sheet)))

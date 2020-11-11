@@ -397,3 +397,19 @@
   (log/debug "[native-module] resetKeyboardInput")
   (when platform/android?
     (.resetKeyboardInputCursor ^js (status) input selection)))
+
+(defn get-profile-images [cb]
+  (log/debug "[native-module] getProfileImages")
+  (.getProfileImages ^js (status) cb))
+
+(defn get-profile-image [name cb]
+  (log/debug "[native-module] getProfileImage" name)
+  (.getProfileImage ^js (status) name cb))
+
+(defn delete-profile-image [name cb]
+  (log/debug "[native-module] deleteProfileImage" name)
+  (.deleteProfileImage ^js (status) name cb))
+
+(defn save-profile-image [path ax ay bx by cb]
+  (log/debug "[native-module] saveProfileImage" path ax ay bx by)
+  (.saveProfileImage ^js (status) path ax ay bx by cb))
