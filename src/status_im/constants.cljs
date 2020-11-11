@@ -282,4 +282,4 @@
 (def faq-keycard (str faq "#keycard"))
 (def keycard-integration-link "https://status.im/keycard-integration")
 
-(def status-community-id "0xdd48f6601625a77a7dde031a63f2de92dc5d04c29a77785320d4a761f61bf561")
+(def status-community-id "0x039b2da47552aa117a96ea8f1d4d108ba66637c7517a3c94a57b99dbb8a002eda2")
