@@ -168,10 +168,11 @@
   (fn []
     (let [{:keys [public-key ens-verified preferred-name]
            :as   account} @(re-frame/subscribe [:multiaccount])
-          on-share #(re-frame/dispatch [:show-popover
-                                        {:view     :share-chat-key
-                                         :address  public-key
-                                         :ens-name preferred-name}])]
+          on-share        #(re-frame/dispatch [:show-popover
+                                               {:view     :share-chat-key
+                                                :address  public-key
+                                                :ens-name preferred-name}])
+          has-picture     (boolean (get-in account [:profile-picture :url]))]
       [react/view {:flex 1}
        [quo/animated-header
         {:right-accessories [{:accessibility-label :share-header-button
@@ -179,13 +180,13 @@
                               :on-press            on-share}]
          :use-insets        true
          :extended-header   (profile-header/extended-header
-                             {:on-press         on-share
+                             {:on-press  on-share
                               :on-edit   #(re-frame/dispatch [:bottom-sheet/show-sheet
-                                                              {:content (edit/bottom-sheet false)}])
-                              :title            (multiaccounts/displayed-name account)
-                              :photo            (multiaccounts/displayed-photo account)
-                              :monospace        (not ens-verified)
-                              :subtitle         (if (and ens-verified public-key)
-                                                  (gfy/generate-gfy public-key)
-                                                  (utils/get-shortened-address public-key))})}
+                                                              {:content (edit/bottom-sheet has-picture)}])
+                              :title     (multiaccounts/displayed-name account)
+                              :photo     (multiaccounts/displayed-photo account)
+                              :monospace (not ens-verified)
+                              :subtitle  (if (and ens-verified public-key)
+                                           (gfy/generate-gfy public-key)
+                                           (utils/get-shortened-address public-key))})}
         [content]]])))

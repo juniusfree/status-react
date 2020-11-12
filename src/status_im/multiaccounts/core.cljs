@@ -57,8 +57,8 @@
 
 (defn displayed-photo
   "If a photo-path is set use it, otherwise fallback on identicon or generate"
-  [{:keys [photo-path identicon public-key]}]
-  (or photo-path
+  [{:keys [profile-picture identicon public-key]}]
+  (or (get-in profile-picture [:url])
       identicon
       (identicon/identicon public-key)))
 
@@ -161,7 +161,8 @@
   {:events [::save-profile-picture]}
   [cofx path ax ay bx by]
   (fx/merge cofx
-            {::save-profile-picture [path ax ay bx by]}
+            ;; {::save-profile-picture [path ax ay bx by]}
+            (multiaccounts.update/optimistic :profile-picture {:url path})
             (bottom-sheet/hide-bottom-sheet)))
 
 (fx/defn delete-profile-picture
@@ -169,4 +170,5 @@
   [cofx name]
   (fx/merge cofx
             {::delete-profile-picture name}
+            (multiaccounts.update/optimistic :profile-picture {})
             (bottom-sheet/hide-bottom-sheet)))
