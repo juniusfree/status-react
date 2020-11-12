@@ -161,7 +161,7 @@
   {:events [::save-profile-picture]}
   [cofx path ax ay bx by]
   (fx/merge cofx
-            ;; {::save-profile-picture [path ax ay bx by]}
+            {::save-profile-picture [path ax ay bx by]}
             (multiaccounts.update/optimistic :profile-picture {:url path})
             (bottom-sheet/hide-bottom-sheet)))
 
