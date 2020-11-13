@@ -1,5 +1,6 @@
 (ns status-im.native-module.core
   (:require [re-frame.core :as re-frame]
+            [clojure.string :as str]
             [status-im.utils.db :as utils.db]
             [status-im.ui.components.react :as react]
             [status-im.utils.platform :as platform]
@@ -410,6 +411,11 @@
   (log/debug "[native-module] deleteProfileImage" name)
   (.deleteProfileImage ^js (status) name cb))
 
+(defn clean-path [path]
+  (if path
+    (str/replace-first path #"file://" "")
+    (log/warn "[nativ-module] Empty path was provided")))
+
 (defn save-profile-image [path ax ay bx by cb]
   (log/debug "[native-module] saveProfileImage" path ax ay bx by)
-  (.saveProfileImage ^js (status) path ax ay bx by cb))
+  (.saveProfileImage ^js (status) (clean-path path) ax ay bx by cb))

@@ -1,6 +1,5 @@
 (ns status-im.ui.screens.profile.user.edit-picture
   (:require [quo.core :as quo]
-            [clojure.string :as cstr]
             [re-frame.core :as re-frame]
             [status-im.i18n :as i18n]
             [status-im.multiaccounts.core :as multiaccounts]
@@ -12,18 +11,14 @@
                 :width                crop-size
                 :height               crop-size})
 
-(defn clean-path [^js img]
-  (when-let [path (.-path ^js img)]
-    (cstr/replace-first path #"file://" "")))
-
 (defn pick-pic []
   (react/show-image-picker
-   #(re-frame/dispatch [::multiaccounts/save-profile-picture (clean-path %) 0 0 crop-size crop-size])
+   #(re-frame/dispatch [::multiaccounts/save-profile-picture (.-path ^js %) 0 0 crop-size crop-size])
    crop-opts))
 
 (defn take-pic []
   (react/show-image-picker-camera
-   #(re-frame/dispatch [::multiaccounts/save-profile-picture (clean-path %) 0 0 crop-size crop-size])
+   #(re-frame/dispatch [::multiaccounts/save-profile-picture (.-path ^js %) 0 0 crop-size crop-size])
    crop-opts))
 
 (defn bottom-sheet [has-picture]
