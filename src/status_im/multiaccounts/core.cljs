@@ -2,12 +2,13 @@
   (:require [re-frame.core :as re-frame]
             [status-im.ethereum.stateofus :as stateofus]
             [status-im.multiaccounts.update.core :as multiaccounts.update]
-            [ status-im.ui.components.bottom-sheet.core :as bottom-sheet]
+            [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
             [status-im.native-module.core :as native-module]
             [status-im.utils.fx :as fx]
             [status-im.utils.gfycat.core :as gfycat]
             [status-im.utils.identicon :as identicon]
             [status-im.utils.theme :as utils.theme]
+            [status-im.utils.types :as types]
             [status-im.theme.core :as theme]
             [status-im.utils.utils :as utils]
             [quo.platform :as platform]
@@ -58,7 +59,8 @@
 (defn displayed-photo
   "If a photo-path is set use it, otherwise fallback on identicon or generate"
   [{:keys [profile-picture identicon public-key]}]
-  (or (get-in profile-picture [:url])
+  (or (get profile-picture :url)        ; Optimistic update, show local image while uploading
+      (get profile-picture :uri)
       identicon
       (identicon/identicon public-key)))
 
@@ -150,7 +152,8 @@
 (re-frame/reg-fx
  ::save-profile-picture
  (fn [[path ax ay bx by]]
-   (native-module/save-profile-image path ax ay bx by println)))
+   (native-module/save-profile-image path ax ay bx by
+                                     #(re-frame/dispatch [::update-local-picture %]))))
 
 (re-frame/reg-fx
  ::delete-profile-picture
@@ -172,3 +175,8 @@
             {::delete-profile-picture name}
             (multiaccounts.update/optimistic :profile-picture {})
             (bottom-sheet/hide-bottom-sheet)))
+
+(fx/defn store-profile-picture
+  {:events [::update-local-picture]}
+  [cofx pics]
+  (multiaccounts.update/optimistic cofx :profile-picture (first (types/json->clj pics))))
