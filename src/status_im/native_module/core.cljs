@@ -407,9 +407,9 @@
   (log/debug "[native-module] getProfileImage" name)
   (.getProfileImage ^js (status) name cb))
 
-(defn delete-profile-image [name cb]
-  (log/debug "[native-module] deleteProfileImage" name)
-  (.deleteProfileImage ^js (status) name cb))
+(defn delete-profile-image [cb]
+  (log/debug "[native-module] deleteProfileImage")
+  (.deleteProfileImage ^js (status) cb))
 
 (defn clean-path [path]
   (if path

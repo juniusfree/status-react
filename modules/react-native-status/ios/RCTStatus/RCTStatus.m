@@ -311,12 +311,11 @@ RCT_EXPORT_METHOD(getProfileImage:(NSString *)imageName
 }
 
 //////////////////////////////////////////////////////////////////// DeleteProfileImage
-RCT_EXPORT_METHOD(deleteProfileImage:(NSString *)imageName
-                  callback:(RCTResponseSenderBlock)callback) {
+RCT_EXPORT_METHOD(deleteProfileImage:(RCTResponseSenderBlock)callback) {
 #if DEBUG
     NSLog(@"DeleteProfileImage() method called");
 #endif
-    NSString *result = StatusgoDeleteProfileImage(imageName);
+    NSString *result = StatusgoDeleteProfileImage();
     callback(@[result]);
 }
 

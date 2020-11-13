@@ -12,6 +12,7 @@
             [status-im.theme.core :as theme]
             [status-im.utils.utils :as utils]
             [quo.platform :as platform]
+            [taoensso.timbre :as log]
             [clojure.string :as string]))
 
 (defn contact-names
@@ -157,8 +158,8 @@
 
 (re-frame/reg-fx
  ::delete-profile-picture
- (fn [name]
-   (native-module/delete-profile-image name println)))
+ (fn []
+   (native-module/delete-profile-image #(log/info "[multiaccount] Delete profile image" %))))
 
 (fx/defn save-profile-picture
   {:events [::save-profile-picture]}
@@ -172,7 +173,7 @@
   {:events [::delete-profile-picture]}
   [cofx name]
   (fx/merge cofx
-            {::delete-profile-picture name}
+            {::delete-profile-picture nil}
             (multiaccounts.update/optimistic :profile-picture {})
             (bottom-sheet/hide-bottom-sheet)))
 

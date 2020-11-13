@@ -899,7 +899,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
     }
  
     @ReactMethod
-    public void deleteProfileImage(final String name, final Callback callback) {
+    public void deleteProfileImage(final Callback callback) {
         Log.d(TAG, "deleteProfileImage");
         if (!checkAvailability()) {
             callback.invoke(false);
@@ -908,7 +908,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                String res = Statusgo.deleteProfileImage(name);
+                String res = Statusgo.deleteProfileImage();
 
                 callback.invoke(res);
             }
