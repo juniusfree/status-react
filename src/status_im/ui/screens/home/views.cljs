@@ -141,6 +141,39 @@
                                      (re-frame/dispatch [:set :public-group-topic nil])
                                      (re-frame/dispatch [:search/home-filter-changed nil]))}])])))
 
+(defn communities-and-chats [chats status-community loading? search-filter hide-home-tooltip?]
+  (if loading?
+    [react/view {:flex 1 :align-items :center :justify-content :center}
+     [react/activity-indicator {:animating true}]]
+    (if (and (empty? chats)
+             (not status-community)
+             (empty? search-filter)
+             hide-home-tooltip?
+             (not @search-active?))
+      [welcome-blank-page]
+      [react/view
+       (when (or (seq chats) @search-active? (seq search-filter))
+         [search-input-wrapper search-filter chats])
+       (when
+        (and (empty? chats)
+             (not status-community))
+         (or @search-active? (seq search-filter))
+         [start-suggestion search-filter])
+       (when status-community
+         ;; We only support one community now, Status
+         [communities.views/status-community status-community])
+       (when (and status-community
+                  (seq chats))
+         [quo/separator])
+       [list/flat-list
+        {:key-fn                       :chat-id
+         :keyboard-should-persist-taps :always
+         :data                         chats
+         :render-fn                    (fn [home-item] [inner-item/home-list-item home-item])
+         :footer                       (if (and (not hide-home-tooltip?) (not @search-active?))
+                                         [home-tooltip-view]
+                                         [react/view {:height 68}])}]])))
+
 (defn chats-flat-list [chats loading? search-filter hide-home-tooltip?]
   (if loading?
     [react/view {:flex 1 :align-items :center :justify-content :center}
@@ -163,11 +196,18 @@
                                         [home-tooltip-view]
                                         [react/view {:height 68}])}])))
 
+(views/defview communities-list []
+  (views/letsubs [status-community [:communities/status-community]]
+    (when status-community
+      [react/view
+       [react/text "community"]])))
+
 (views/defview chats-list []
-  (views/letsubs [loading? [:chats/loading?]
+  (views/letsubs [status-community [:communities/status-community]
+                  loading? [:chats/loading?]
                   {:keys [chats search-filter]} [:home-items]
                   {:keys [hide-home-tooltip?]} [:multiaccount]]
-    [chats-flat-list chats loading? search-filter hide-home-tooltip?]))
+    [communities-and-chats chats status-community loading? search-filter hide-home-tooltip?]))
 
 (views/defview plus-button []
   (views/letsubs [logging-in? [:multiaccounts/login]]

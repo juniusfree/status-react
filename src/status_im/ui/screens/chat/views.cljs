@@ -35,10 +35,12 @@
             [status-im.constants :as constants]))
 
 (defn topbar []
-  (let [current-chat @(re-frame/subscribe [:current-chat/metadata])]
+  (let [{:keys [community-id] :as current-chat} @(re-frame/subscribe [:current-chat/metadata])]
     [topbar/topbar
      {:content           [toolbar-content/toolbar-content-view]
-      :navigation        {:on-press #(re-frame/dispatch [:navigate-to :home])}
+      :navigation        {:on-press #(re-frame/dispatch (if community-id
+                                                          [:navigate-to :community community-id]
+                                                          [:navigate-to :home]))}
       :right-accessories [{:icon                :main-icons/more
                            :accessibility-label :chat-menu-button
                            :on-press

@@ -218,20 +218,51 @@
 (reg-root-key-sub :communities :communities)
 
 (re-frame/reg-sub
+ :communities
+ (fn [db]
+   (if config/communities-enabled?
+     (:communities db)
+     ;; If not enabled, only return status-community
+     (select-keys (:communities db) [constants/status-community-id]))))
+
+(re-frame/reg-sub
  :communities/community
  :<- [:communities]
  (fn [communities [_ id]]
    (get communities id)))
 
 (re-frame/reg-sub
+ :communities/status-community
+ :<- [:search/home-filter]
+ :<- [:communities]
+ (fn [[search-filter communities]]
+   (let [status-community (get communities constants/status-community-id)]
+     (when (and (:joined status-community)
+                (or (string/blank? search-filter)
+                    (string/includes? (string/lower-case
+                                       (get-in status-community [:description :identity :display-name])) search-filter)))
+       status-community))))
+
+(re-frame/reg-sub
  :communities/current-community
  :<- [:communities]
  :<- [:chats/current-raw-chat]
-
  (fn [[communities {:keys [community-id]}]]
    (get communities community-id)))
 
+(re-frame/reg-sub
+ :communities/unviewed-count
+ (fn [[_ community-id]]
+   [(re-frame/subscribe [:chats/by-community-id community-id])])
+ (fn [[chats]]
+   (reduce (fn [acc {:keys [unviewed-messages-count]}]
+             (+ acc (or unviewed-messages-count 0)))
+           0
+           chats)))
+
+
 ;;GENERAL ==============================================================================================================
+
 
 (re-frame/reg-sub
  :multiaccount/logged-in?
@@ -722,7 +753,7 @@
  :<- [:chats/current-raw-chat]
  (fn [current-chat]
    (select-keys current-chat
-                [:public? :group-chat :chat-id :chat-name :color :invitation-admin])))
+                [:community-id :public? :group-chat :chat-id :chat-name :color :invitation-admin])))
 
 (re-frame/reg-sub
  :current-chat/one-to-one-chat?
@@ -2028,9 +2059,8 @@
                           (vals chats))]
 
      (sort-by :timestamp > (filter (fn [{:keys [community-id]}]
-                                     ;; Ignore communities unless status-community chats
-                                     (or (not community-id)
-                                         (= community-id constants/status-community-id)))
+                                     ;; Ignore communities
+                                     (not community-id))
                                    filtered-chats)))))
 
 (defn extract-currency-attributes [currency]

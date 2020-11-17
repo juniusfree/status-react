@@ -17,11 +17,23 @@
 (def access-invitation-only 2)
 (def access-on-request 3)
 
+(defn <-chats-rpc [chats]
+  (reduce-kv (fn [acc k v]
+               (assoc acc
+                      (name k)
+                      (assoc v
+                             :identity {:display-name (get-in v [:identity :display_name])
+                                        :description (get-in v [:identity :description])}
+                             :id (name k))))
+             {}
+             chats))
+
 (defn <-rpc [{:keys [description] :as c}]
   (let [identity (:identity description)]
     (-> c
         (assoc-in [:description :identity] {:display-name (:display_name identity)
-                                            :description (:description identity)}))))
+                                            :description (:description identity)})
+        (update-in [:description :chats] <-chats-rpc))))
 (fx/defn handle-chats [cofx chats]
   (models.chat/ensure-chats cofx chats))
 

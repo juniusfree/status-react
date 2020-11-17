@@ -12,11 +12,6 @@
       "eth2"
     ]],
 
-    ["Status community", [
-      "status-standups",
-      "status-announcements",
-    ]],
-
     ["General", [
       "chitchat",
       "hello",

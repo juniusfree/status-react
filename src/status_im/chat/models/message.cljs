@@ -140,16 +140,16 @@
             ;;If its a profile updates we want to add this message to the timeline as well
             #(when (get-in cofx [:db :chats chat-id :profile-public-key])
                {:dispatch [::receive-one (assoc message :chat-id chat-model/timeline-chat-id)]})
-            (when-not (earlier-than-deleted-at? cofx message)
-              (if (message-loaded? cofx message)
+            #(when-not (earlier-than-deleted-at? cofx message)
+               (if (message-loaded? cofx message)
                 ;; If the message is already loaded, it means it's an update, that
                 ;; happens when a message that was missing a reply had the reply
                 ;; coming through, in which case we just insert the new message
-                {:db (assoc-in db [:messages chat-id message-id] message)}
-                (fx/merge cofx
-                          (add-received-message message)
-                          (update-unviewed-count message)
-                          (chat-model/join-time-messages-checked chat-id))))))
+                 {:db (assoc-in db [:messages chat-id message-id] message)}
+                 (fx/merge cofx
+                           (add-received-message message)
+                           (update-unviewed-count message)
+                           (chat-model/join-time-messages-checked chat-id))))))
 
 ;;TODO currently we process every message, we need to precess them by batches
 ;;or better move processing to status-go

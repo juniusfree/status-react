@@ -150,15 +150,14 @@
         :transition :presentation-ios
         :insets     {:bottom true}
         :component  contact/profile}]
-      (when config/communities-enabled?
-        [{:name       :communities
-          :transition :presentation-ios
-          :insets     {:bottom true}
-          :component  communities/communities}
-         {:name       :community
-          :transition :presentation-ios
-          :insets     {:bottom true}
-          :component  communities/community}])
+      [{:name       :communities
+        :transition :presentation-ios
+        :insets     {:bottom true}
+        :component  communities/communities}
+       {:name       :community
+        :transition :presentation-ios
+        :insets     {:bottom true}
+        :component  communities/community}]
       (when config/quo-preview-enabled?
         [{:name      :quo-preview
           :insets    {:top false :bottom false}

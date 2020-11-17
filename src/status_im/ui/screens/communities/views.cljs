@@ -6,12 +6,16 @@
      [status-im.i18n :as i18n]
      [status-im.utils.core :as utils]
      [status-im.utils.fx :as fx]
+     [status-im.utils.config :as config]
+     [status-im.constants :as constants]
      [status-im.communities.core :as communities]
      [status-im.ui.screens.home.views.inner-item :as inner-item]
      [status-im.ui.screens.home.styles :as home.styles]
      [status-im.ui.components.list.views :as list]
      [status-im.ui.components.copyable-text :as copyable-text]
+     [status-im.react-native.resources :as resources]
      [status-im.ui.components.topbar :as topbar]
+     [status-im.ui.components.icons.vector-icons :as icons]
      [status-im.ui.components.colors :as colors]
      [status-im.ui.components.chat-icon.screen :as chat-icon.screen]
      [status-im.ui.components.toolbar :as toolbar]
@@ -22,46 +26,23 @@
   (re-frame/dispatch [:bottom-sheet/hide])
   (re-frame/dispatch event))
 
-(defn community-channel-preview-list-item [{:keys [id identity]}]
-  [quo/list-item
-   {:icon                      [chat-icon.screen/chat-icon-view-chat-list
-                                id
-                                true
-                                (:display-name identity)
-                                ;; TODO: should be derived by id
-                                (or (:color identity)
-                                    (rand-nth colors/chat-colors))
-                                false
-                                false]
-    :title                     [react/view {:flex-direction :row
-                                            :flex           1}
-                                [react/view {:flex-direction :row
-                                             :flex           1
-                                             :padding-right  16
-                                             :align-items    :center}
-                                 [quo/text {:weight              :medium
-                                            :accessibility-label :community-name-text
-                                            :ellipsize-mode      :tail
-                                            :number-of-lines     1}
-                                  (utils/truncate-str (:display-name identity) 30)]]]
-    :title-accessibility-label :community-name-text
-    :subtitle                  [react/view {:flex-direction :row}
-                                [react/view {:flex 1}
-                                 [quo/text
-                                  (utils/truncate-str (:description identity) 30)]]]}])
-
 (defn community-list-item [{:keys [id description]}]
   (let [identity (:identity description)]
     [quo/list-item
-     {:icon                      [chat-icon.screen/chat-icon-view-chat-list
-                                  id
-                                  true
-                                  (:display-name identity)
-                                  ;; TODO: should be derived by id
-                                  (or (:color identity)
-                                      (rand-nth colors/chat-colors))
-                                  false
-                                  false]
+     {:icon                       (if (= id constants/status-community-id)
+                                    [react/image {:source (resources/get-image :status-logo-rainbow)
+                                                  :style {:width 40
+                                                          :height 40}}]
+
+                                    [chat-icon.screen/chat-icon-view-chat-list
+                                     id
+                                     true
+                                     (:display-name identity)
+                                     ;; TODO: should be derived by id
+                                     (or (:color identity)
+                                         (rand-nth colors/chat-colors))
+                                     false
+                                     false])
       :title                     [react/view {:flex-direction :row
                                               :flex           1}
                                   [react/view {:flex-direction :row
@@ -100,14 +81,15 @@
 (views/defview communities []
   (views/letsubs [communities [:communities]]
     [react/view {:flex 1}
-     [topbar/topbar {:title (i18n/label :t/communities)
-                     :right-accessories [{:icon                :main-icons/more
-                                          :accessibility-label :chat-menu-button
-                                          :on-press
-                                          #(re-frame/dispatch [:bottom-sheet/show-sheet
-                                                               {:content (fn []
-                                                                           [communities-actions])
-                                                                :height  256}])}]}]
+     [topbar/topbar (cond-> {:title (i18n/label :t/communities)}
+                      config/communities-enabled?
+                      (assoc :right-accessories [{:icon                :main-icons/more
+                                                  :accessibility-label :chat-menu-button
+                                                  :on-press
+                                                  #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                                       {:content (fn []
+                                                                                   [communities-actions])
+                                                                        :height  256}])}]))]
      [react/scroll-view {:style                   {:flex 1}
                          :content-container-style {:padding-vertical 8}}
       [list/flat-list
@@ -115,10 +97,11 @@
         :keyboard-should-persist-taps :always
         :data                         (vals communities)
         :render-fn                    (fn [community] [community-list-item community])}]]
-     [toolbar/toolbar
-      {:show-border? true
-       :center [quo/button {:on-press #(re-frame/dispatch [::create-pressed])}
-                (i18n/label :t/create-a-community)]}]]))
+     (when config/communities-enabled?
+       [toolbar/toolbar
+        {:show-border? true
+         :center [quo/button {:on-press #(re-frame/dispatch [::create-pressed])}
+                  (i18n/label :t/create-a-community)]}])]))
 
 (fx/defn import-pressed
   {:events [::import-pressed]}
@@ -291,11 +274,12 @@
           :number-of-lines 4
           :on-change-text  #(reset! channel-description %)}]]
 
-       [react/view {:style {:padding-top 20
-                            :padding-horizontal 20}}
-        [quo/button {:disabled  (not (valid? @channel-name @channel-description))
-                     :on-press #(re-frame/dispatch [::create-channel-confirmation-pressed @channel-name @channel-description])}
-         (i18n/label :t/create)]]])))
+       (when config/communities-enabled?
+         [react/view {:style {:padding-top 20
+                              :padding-horizontal 20}}
+          [quo/button {:disabled  (not (valid? @channel-name @channel-description))
+                       :on-press #(re-frame/dispatch [::create-channel-confirmation-pressed @channel-name @channel-description])}
+           (i18n/label :t/create)]])])))
 
 (def create-channel-sheet
   {:content create-channel})
@@ -348,19 +332,39 @@
        :title               (i18n/label :t/invite-people)
        :accessibility-label :community-invite-people
        :icon                :main-icons/close
-       :on-press            #(re-frame/dispatch [::invite-people-pressed id])}])])
+       :on-press            #(re-frame/dispatch [::invite-people-pressed id])}])
+   [quo/list-item
+    {:theme               :accent
+     :title               (i18n/label :t/leave)
+     :accessibility-label :leave
+     :icon                :main-icons/close
+     :on-press            #(do
+                             (re-frame/dispatch [:navigate-to :home])
+                             (re-frame/dispatch [:bottom-sheet/hide])
+                             (re-frame/dispatch [::communities/leave id]))}]])
 
 (defn toolbar-content [id display-name color]
   [react/view {:style  {:flex           1
                         :align-items    :center
                         :flex-direction :row}}
    [react/view {:margin-right 10}
-    [chat-icon.screen/chat-icon-view-toolbar
-     id
-     true
-     display-name
-     (or color
-         (rand-nth colors/chat-colors))]]])
+    (if (= id constants/status-community-id)
+      [react/image {:source (resources/get-image :status-logo-rainbow)
+                    :style {:width 40
+                            :height 40}}]
+      [chat-icon.screen/chat-icon-view-toolbar
+       id
+       true
+       display-name
+       (or color
+           (rand-nth colors/chat-colors))])]
+   [react/view {:style {:flex 1 :justify-content :center}}
+    [react/text {:style {:typography  :main-medium
+                         :font-size   15
+                         :line-height 22}
+                 :number-of-lines     1
+                 :accessibility-label :community-name-text}
+     display-name]]])
 
 (defn topbar [id display-name color admin]
   [topbar/topbar
@@ -374,10 +378,86 @@
                                                           [community-actions id admin])
                                                :height  256}])}]}])
 
-
 (defn welcome-blank-page []
   [react/view {:style {:flex 1 :flex-direction :row :align-items :center :justify-content :center}}
    [react/i18n-text {:style home.styles/welcome-blank-text :key :welcome-blank-message}]])
+
+(views/defview community-unviewed-count [id]
+  (views/letsubs [unviewed-count [:communities/unviewed-count id]]
+    (when-not (zero? unviewed-count)
+      [react/view {:style               home.styles/public-unread
+                   :accessibility-label :unviewed-messages-public}])))
+
+(defn status-community [{:keys [id description]}]
+  [quo/list-item
+   {:icon                      [react/image {:source (resources/get-image :status-logo-rainbow)
+                                             :style {:width 40
+                                                     :height 40}}]
+    :title                     [react/view {:flex-direction :row
+                                            :flex           1}
+                                [react/view {:flex-direction :row
+                                             :flex           1
+                                             :padding-right  16
+                                             :align-items    :center}
+                                 [quo/text {:weight              :medium
+                                            :accessibility-label :chat-name-text
+                                            :ellipsize-mode      :tail
+                                            :number-of-lines     1}
+                                  "Status"]]]
+    :title-accessibility-label :chat-name-text
+    :subtitle                  [react/view {:flex-direction :row}
+                                [react/text-class {:style               home.styles/last-message-text
+                                                   :number-of-lines     1
+                                                   :ellipsize-mode      :tail
+                                                   :accessibility-label :chat-message-text} (get-in description [:identity :description])]
+                                [community-unviewed-count id]]
+    :on-press                  #(do
+                                  (re-frame/dispatch [:dismiss-keyboard])
+                                  (re-frame/dispatch [:navigate-to :community id]))
+    ;; TODO: actions
+    :on-long-press             #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                    nil])}])
+
+(defn channel-preview-item [{:keys [id identity]}]
+  [quo/list-item
+   {:icon                      [chat-icon.screen/chat-icon-view-chat-list
+                                id true (:display-name identity) colors/blue false false]
+    :title                     [react/view {:flex-direction :row
+                                            :flex           1}
+                                [react/view {:flex-direction :row
+                                             :flex           1
+                                             :padding-right  16
+                                             :align-items    :center}
+                                 [icons/icon :main-icons/tiny-group
+                                  {:color           colors/black
+                                   :width           15
+                                   :height          15
+                                   :container-style {:width           15
+                                                     :height          15
+                                                     :margin-right   2}}]
+                                 [quo/text {:weight              :medium
+                                            :accessibility-label :chat-name-text
+                                            :ellipsize-mode      :tail
+                                            :number-of-lines     1}
+                                  (utils/truncate-str (:display-name identity) 30)]]]
+    :title-accessibility-label :chat-name-text
+    :subtitle                  [react/view {:flex-direction :row}
+                                [react/text-class {:style               home.styles/last-message-text
+                                                   :number-of-lines     1
+                                                   :ellipsize-mode      :tail
+                                                   :accessibility-label :chat-message-text} (:description identity)]]}])
+
+(defn community-channel-preview-list [_ description]
+  (let [chats (reduce-kv
+               (fn [acc k v]
+                 (conj acc (assoc v :id (name k))))
+               []
+               (get-in description [:chats]))]
+    [list/flat-list
+     {:key-fn                       :id
+      :keyboard-should-persist-taps :always
+      :data                         chats
+      :render-fn                    channel-preview-item}]))
 
 (defn community-chat-list [chats]
   (if (empty? chats)
@@ -386,20 +466,12 @@
      {:key-fn                       :chat-id
       :keyboard-should-persist-taps :always
       :data                         chats
-      :render-fn                    (fn [home-item] [inner-item/home-list-item home-item])
+      :render-fn                    (fn [home-item] [inner-item/home-list-item (assoc home-item :color colors/blue)])
       :footer                       [react/view {:height 68}]}]))
 
 (views/defview community-channel-list [id]
   (views/letsubs [chats [:chats/by-community-id id]]
     [community-chat-list chats]))
-
-(defn community-channel-preview-list [_ chats]
-  [react/view {:flex 1}
-   [list/flat-list
-    {:key-fn                       :chat-id
-     :keyboard-should-persist-taps :always
-     :data                         chats
-     :render-fn                    (fn [chat] [community-channel-preview-list-item chat])}]])
 
 (views/defview community [route]
   (views/letsubs [{:keys [id description joined admin]} [:communities/community (get-in route [:route :params])]]
@@ -411,7 +483,7 @@
       admin]
      (if joined
        [community-channel-list id]
-       [community-channel-preview-list id (map (fn [[k v]] (assoc v :id k)) (:chats description))])
+       [community-channel-preview-list id description])
      (when-not joined
        [react/view {:style {:padding-top 20
                             :padding-horizontal 20}}
@@ -431,7 +503,6 @@
                   :accessibility-label :chat-key
                   :monospace           true}
         community-key]]]]))
-
 
 (defn- join-featured-community-pressed [community-id]
   (re-frame/dispatch [::communities/join community-id])

@@ -6,7 +6,6 @@
             [status-im.utils.fx :as fx]
             [taoensso.timbre :as log]))
 
-
 (defn type->rpc [{:keys [public? group-chat profile-public-key timeline?] :as chat}]
   (assoc chat :chatType (cond
                           profile-public-key constants/profile-chat-type
@@ -17,21 +16,21 @@
 
 (defn rpc->type [{:keys [chatType name] :as chat}]
   (cond
-   (or (= constants/public-chat-type chatType)
-       (= constants/profile-chat-type chatType)
-       (= constants/timeline-chat-type chatType)) (assoc chat
-                                                         :chat-name (str "#" name)
-                                                         :public? true
-                                                         :group-chat true
-                                                         :timeline? (= constants/timeline-chat-type chatType))
-   (= constants/community-chat-type chatType) (assoc chat
-                                                     :chat-name name
-                                                     :group-chat true)
-   (= constants/private-group-chat-type chatType) (assoc chat
-                                                         :chat-name name
-                                                         :public? false
-                                                         :group-chat true)
-   :else (assoc chat :public? false :group-chat false)))
+    (or (= constants/public-chat-type chatType)
+        (= constants/profile-chat-type chatType)
+        (= constants/timeline-chat-type chatType)) (assoc chat
+                                                          :chat-name (str "#" name)
+                                                          :public? true
+                                                          :group-chat true
+                                                          :timeline? (= constants/timeline-chat-type chatType))
+    (= constants/community-chat-type chatType) (assoc chat
+                                                      :chat-name name
+                                                      :group-chat true)
+    (= constants/private-group-chat-type chatType) (assoc chat
+                                                          :chat-name name
+                                                          :public? false
+                                                          :group-chat true)
+    :else (assoc chat :public? false :group-chat false)))
 
 (defn- marshal-members [{:keys [admins contacts members-joined chat-type] :as chat}]
   (cond-> chat
