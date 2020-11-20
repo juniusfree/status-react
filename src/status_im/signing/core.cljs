@@ -147,8 +147,10 @@
              :token    token
              :symbol   symbol}))))))
 
-(defn parse-tx-obj [db {:keys [from to value data]}]
-  (merge {:from {:address from}}
+(defn parse-tx-obj [db {:keys [from to value data cancel? hash]}]
+  (merge {:from    {:address from}
+          :cancel? cancel?
+          :hash    hash}
          (if (nil? to)
            {:contact {:name (i18n/label :t/new-contract)}}
            (let [eth-value  (when value (money/bignumber value))
@@ -379,3 +381,18 @@
                           :data (abi-spec/encode method params)}
               :on-result on-result
               :on-error  on-error}))
+
+(fx/defn cancel-transaction
+  {:events [:signing/cancel-transaction]}
+  [cofx {:keys [from nonce hash]}]
+  (sign cofx {:tx-obj {:from from
+                       :to from
+                       :nonce nonce
+                       :value "0x0"
+                       :cancel? true
+                       :hash hash}}))
+
+(fx/defn increase-gas
+  {:events [:signing/increase-gas]}
+  [cofx tx]
+  (sign cofx {:tx-obj (select-keys tx [:from :to :value :data :gas :nonce])}))

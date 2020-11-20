@@ -10,7 +10,8 @@
             [status-im.ui.components.topbar :as topbar]
             [status-im.ui.screens.wallet.transactions.styles :as styles]
             [quo.core :as quo]
-            [status-im.ui.components.toolbar :as toolbar])
+            [status-im.ui.components.toolbar :as toolbar]
+            [status-im.ethereum.json-rpc :as json-rpc])
   (:require-macros [status-im.utils.views :refer [defview letsubs]]))
 
 (defn- transaction-icon
@@ -38,42 +39,60 @@
 (defn render-transaction
   [{:keys [label contact address contact-accessibility-label
            address-accessibility-label currency-text amount-text
-           time-formatted on-touch-fn type]}]
-  [list/touchable-item on-touch-fn
-   [react/view {:accessibility-label :transaction-item}
-    [list/item
-     (when type
-       [list/item-icon (transaction-type->icon (keyword type))])
-     [list/item-content
-      [react/view {:style styles/amount-time}
-       [react/nested-text {:style           styles/tx-amount
-                           :ellipsize-mode  "tail"
-                           :number-of-lines 1}
-        [{:accessibility-label :amount-text}
-         amount-text]
-        " "
-        [{:accessibility-label :currency-text}
-         currency-text]]
-       [react/text {:style styles/tx-time}
-        time-formatted]]
-      [react/view {:style styles/address-row}
-       [react/text {:style styles/address-label}
-        label]
-       (when contact
-         [react/text {:style               styles/address-contact
-                      :accessibility-label contact-accessibility-label}
-          contact])
-       [quo/text {:style               styles/address-hash
-                  :monospace           true
-                  :color               :secondary
-                  :ellipsize-mode      "middle"
-                  :number-of-lines     1
-                  :accessibility-label address-accessibility-label}
-        address]]]
-     [list/item-icon {:icon      :main-icons/next
-                      :style     {:margin-top 10}
-                      :icon-opts (merge styles/forward
-                                        {:accessibility-label :show-transaction-button})}]]]])
+           time-formatted on-touch-fn type hash]}]
+  [react/view
+   [list/touchable-item on-touch-fn
+    [react/view {:accessibility-label :transaction-item}
+     [list/item
+      (when type
+        [list/item-icon (transaction-type->icon (keyword type))])
+      [list/item-content
+       [react/view {:style styles/amount-time}
+        [react/nested-text {:style           styles/tx-amount
+                            :ellipsize-mode  "tail"
+                            :number-of-lines 1}
+         [{:accessibility-label :amount-text}
+          amount-text]
+         " "
+         [{:accessibility-label :currency-text}
+          currency-text]]
+        [react/text {:style styles/tx-time}
+         time-formatted]]
+       [react/view {:style styles/address-row}
+        [react/text {:style styles/address-label}
+         label]
+        (when contact
+          [react/text {:style               styles/address-contact
+                       :accessibility-label contact-accessibility-label}
+           contact])
+        [quo/text {:style               styles/address-hash
+                   :monospace           true
+                   :color               :secondary
+                   :ellipsize-mode      "middle"
+                   :number-of-lines     1
+                   :accessibility-label address-accessibility-label}
+         address]]]
+      [list/item-icon {:icon      :main-icons/next
+                       :style     {:margin-top 10}
+                       :icon-opts (merge styles/forward
+                                         {:accessibility-label :show-transaction-button})}]]]]
+   [react/view {:flex-direction :row :padding 16 :justify-content :space-between}
+    [quo/button
+     {:on-press
+      (fn []
+        (json-rpc/call
+         {:method     "eth_getTransactionByHash"
+          :params     [hash]
+          :on-success #(re-frame/dispatch [:signing/increase-gas %])}))}
+     "Increase Gas"]
+    [quo/button
+     {:on-press
+      (fn []
+        (json-rpc/call
+         {:method     "eth_getTransactionByHash"
+          :params     [hash]
+          :on-success #(re-frame/dispatch [:signing/cancel-transaction %])}))}
+     "Cancel"]]])
 
 (defn etherscan-link [address]
   (let [link @(re-frame/subscribe [:wallet/etherscan-link address])]
