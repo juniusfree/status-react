@@ -315,13 +315,13 @@
            (let [{:keys [public-key match]}
                  (match-mention text users mention-key-idx)]
              (if-not match
-               (recur text (fn [] users) (rest idxs) diff)
+               (recur text users (rest idxs) diff)
                (let [new-text (string/join
                                [(subs text 0 (inc mention-key-idx))
                                 public-key
                                 (subs text (+ (inc mention-key-idx)
                                               (count match)))])]
-                 (recur new-text (fn [] users) (rest idxs)
+                 (recur new-text users (rest idxs)
                         (+ diff (- (count text) (count new-text)))))))))))))
 
 (defn check-mentions [cofx text]
