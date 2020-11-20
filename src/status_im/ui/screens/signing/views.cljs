@@ -81,7 +81,7 @@
       [react/text {:style {:typography :title-bold}} (str (cond approve?
                                                                 (i18n/label :t/authorize)
                                                                 cancel?
-                                                                "Cancelling"
+                                                                (i18n/label :t/cancelling)
                                                                 :else
                                                                 (i18n/label :t/sending))
                                                           (if cancel?

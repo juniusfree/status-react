@@ -76,23 +76,14 @@
                        :style     {:margin-top 10}
                        :icon-opts (merge styles/forward
                                          {:accessibility-label :show-transaction-button})}]]]]
-   [react/view {:flex-direction :row :padding 16 :justify-content :space-between}
-    [quo/button
-     {:on-press
-      (fn []
-        (json-rpc/call
-         {:method     "eth_getTransactionByHash"
-          :params     [hash]
-          :on-success #(re-frame/dispatch [:signing/increase-gas %])}))}
-     "Increase Gas"]
-    [quo/button
-     {:on-press
-      (fn []
-        (json-rpc/call
-         {:method     "eth_getTransactionByHash"
-          :params     [hash]
-          :on-success #(re-frame/dispatch [:signing/cancel-transaction %])}))}
-     "Cancel"]]])
+   (when (= type :pending)
+     [react/view {:flex-direction :row :padding 16 :justify-content :space-between}
+      [quo/button
+       {:on-press #(re-frame/dispatch [:signing.ui/increase-gas-pressed hash])}
+       (i18n/label :t/increase-gas)]
+      [quo/button
+       {:on-press #(re-frame/dispatch [:signing.ui/cancel-transaction-pressed hash])}
+       (i18n/label :t/cancel)]])])
 
 (defn etherscan-link [address]
   (let [link @(re-frame/subscribe [:wallet/etherscan-link address])]

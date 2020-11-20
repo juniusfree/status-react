@@ -382,17 +382,37 @@
               :on-result on-result
               :on-error  on-error}))
 
+(re-frame/reg-fx
+ :signing/get-transaction-by-hash-fx
+ (fn [[hash handler]]
+   (json-rpc/call
+    {:method     "eth_getTransactionByHash"
+     :params     [hash]
+     :on-success handler})))
+
+(fx/defn cancel-transaction-pressed
+  {:events [:signing.ui/cancel-transaction-pressed]}
+  [_ hash]
+  {:signing/get-transaction-by-hash-fx [hash #(re-frame/dispatch [:signing/cancel-transaction %])]})
+
+(fx/defn increase-gas-pressed
+  {:events [:signing.ui/increase-gas-pressed]}
+  [_ hash]
+  {:signing/get-transaction-by-hash-fx [hash #(re-frame/dispatch [:signing/increase-gas %])]})
+
 (fx/defn cancel-transaction
   {:events [:signing/cancel-transaction]}
   [cofx {:keys [from nonce hash]}]
-  (sign cofx {:tx-obj {:from from
-                       :to from
-                       :nonce nonce
-                       :value "0x0"
-                       :cancel? true
-                       :hash hash}}))
+  (when (and from nonce hash)
+    (sign cofx {:tx-obj {:from from
+                         :to from
+                         :nonce nonce
+                         :value "0x0"
+                         :cancel? true
+                         :hash hash}})))
 
 (fx/defn increase-gas
   {:events [:signing/increase-gas]}
-  [cofx tx]
-  (sign cofx {:tx-obj (select-keys tx [:from :to :value :data :gas :nonce])}))
+  [cofx {:keys [from nonce] :as tx}]
+  (when (and from nonce)
+    (sign cofx {:tx-obj (select-keys tx [:from :to :value :data :gas :nonce])})))
